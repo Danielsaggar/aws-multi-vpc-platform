@@ -1,0 +1,19 @@
+module "compute" {
+  source             = "./modules/compute"
+  instances          = local.instances
+  apps               = local.apps
+  suffix             = local.suffix
+  ami_id             = var.ami_id
+  instance_type      = var.instance_type
+  subnets            = module.network.subnets
+  security_groups    = module.security.ids
+  target_groups      = module.ingress.targets
+  log_groups         = module.observability.groups
+  boundary_arn       = var.workload_boundary_arn
+  artifact_arn       = module.storage.buckets["artifacts"].arn
+  secrets            = module.data.secret_arns
+  redis_resources    = module.data.redis_iam_resources
+  region             = var.region
+  user_data_template = "${path.module}/templates/user-data.sh.tftpl"
+  depends_on         = [module.endpoints]
+}

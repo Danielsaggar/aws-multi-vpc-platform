@@ -1,0 +1,6 @@
+account_id            = "REPLACE_WITH_PROD_ACCOUNT"
+ami_id                = "REPLACE_WITH_APPROVED_AL2023_AMI"
+domain_name           = "example.com"
+hosted_zone_id        = "REPLACE_WITH_ZONE_ID"
+operator_cidrs        = []
+workload_boundary_arn = "REPLACE_WITH_BOOTSTRAP_OUTPUT"

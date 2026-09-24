@@ -1,0 +1,32 @@
+flowchart TB
+  Users[Internet users] -->|HTTPS| ALB
+  Users --> CF[CloudFront default TLS]
+  CF -->|Signed OAC| S3[Private static S3]
+  subgraph AWS[DEV or PROD account / ca-central-1]
+    subgraph Primary[Primary VPC]
+      subgraph Public[Public subnets / AZ A and B]
+        ALB[ALB + regional ACM]
+        IGW[Internet Gateway]
+        NAT[NAT + EIP / PROD one per AZ]
+      end
+      subgraph App[Private application subnets / AZ A and B]
+        EC2[frontsite / backoffice / webapi / gameapi]
+      end
+      ALB -->|8080 / app SG| EC2
+      EC2 --> NAT --> IGW
+      EC2 -->|5432| RDS[Isolated transactional RDS]
+      EC2 -->|6379 TLS| Redis[Isolated Redis]
+      EC2 --> S3EP[S3 gateway endpoint]
+      EC2 --> SMEP[Secrets Manager interface endpoints]
+      SMEP --> Secrets[Application secrets]
+    end
+    subgraph Secondary[Historical VPC]
+      History[Isolated historical RDS / two subnet AZs]
+    end
+    EC2 -->|VPC peering / reciprocal routes / 5432| History
+    S3EP --> Artifacts[Private artifact S3]
+    EC2 --> CW[Centralized CloudWatch groups]
+    ALB --> Logs[Private S3 access logs]
+    GitHub[GitHub OIDC / protected environments] --> Roles[Plan and deployment roles]
+    Roles --> State[Versioned encrypted S3 state + native locking]
+  end

@@ -1,0 +1,4 @@
+account_id        = "REPLACE_WITH_PROD_ACCOUNT"
+environment       = "prod"
+github_repository = "OWNER/REPOSITORY"
+hosted_zone_id    = "REPLACE_WITH_ZONE_ID"

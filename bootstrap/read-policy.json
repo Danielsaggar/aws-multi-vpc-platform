@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["ec2:Describe*", "elasticloadbalancing:Describe*", "rds:Describe*", "rds:ListTagsForResource", "elasticache:Describe*", "elasticache:ListTagsForResource", "acm:DescribeCertificate", "acm:ListTagsForCertificate", "logs:Describe*", "logs:ListTagsForResource", "secretsmanager:DescribeSecret"],
+      "Resource": "*",
+      "Condition": {"StringEquals": {"aws:RequestedRegion": "ca-central-1"}}
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetBucket*", "s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration", "s3:GetReplicationConfiguration", "s3:GetAccelerateConfiguration", "s3:ListAllMyBuckets", "cloudfront:Get*", "cloudfront:List*", "route53:Get*", "route53:List*", "iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:GetInstanceProfile", "iam:GetPolicy", "iam:GetPolicyVersion", "sts:GetCallerIdentity"],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Core validation and local integration use the Python standard library only.
+# External executables: Terraform 1.16.2, AWS CLI v2, Docker/Compose, Git.
+# Scanner versions are pinned in static_checks.py; provider in lockfiles.

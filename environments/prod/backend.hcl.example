@@ -1,0 +1,6 @@
+bucket       = "REPLACE_WITH_PROD_STATE_BUCKET"
+key          = "platform/prod/terraform.tfstate"
+region       = "ca-central-1"
+encrypt      = true
+use_lockfile = true
+kms_key_id   = "REPLACE_WITH_BOOTSTRAP_KMS_KEY_ARN"
