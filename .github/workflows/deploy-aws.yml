@@ -1,0 +1,97 @@
+name: AWS deployment (disabled by default)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [dev, prod]
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: aws-${{ inputs.environment }}
+  cancel-in-progress: false
+jobs:
+  plan:
+    if: vars.AWS_DEPLOY_ENABLED == 'true'
+    environment: ${{ inputs.environment == 'prod' && 'PROD' || 'DEV' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      DEPLOY_ENABLED: ${{ vars.AWS_DEPLOY_ENABLED }}
+      TARGET_ENV: ${{ inputs.environment }}
+      TARGET_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/deployment_gate.py
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          aws-region: ca-central-1
+          unset-current-credentials: true
+      - name: Verify assumed account
+        run: test "$(aws sts get-caller-identity --query Account --output text)" = "$TARGET_ACCOUNT"
+      - name: Initialize and plan
+        env:
+          BACKEND_CONFIG: ${{ vars.TF_BACKEND_HCL }}
+          DEPLOYMENT_INPUTS: ${{ vars.TF_DEPLOYMENT_INPUTS_JSON }}
+        run: |
+          mkdir -p .artifacts
+          printf '%s' "$BACKEND_CONFIG" > .artifacts/backend.hcl
+          printf '%s' "$DEPLOYMENT_INPUTS" > .artifacts/deployment.tfvars.json
+          terraform init -input=false -lockfile=readonly -backend-config=.artifacts/backend.hcl
+          terraform plan -input=false -var-file="environments/$TARGET_ENV/terraform.tfvars" -var-file=.artifacts/deployment.tfvars.json -out=.artifacts/deployment.tfplan
+          terraform show -no-color .artifacts/deployment.tfplan > .artifacts/review.txt
+          sha256sum .artifacts/deployment.tfplan > .artifacts/plan.sha256
+          git rev-parse HEAD > .artifacts/commit.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deployment-plan
+          path: .artifacts/
+          retention-days: 1
+  apply:
+    needs: plan
+    environment: ${{ inputs.environment == 'prod' && 'PROD' || 'DEV' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      DEPLOY_ENABLED: ${{ vars.AWS_DEPLOY_ENABLED }}
+      TARGET_ENV: ${{ inputs.environment }}
+      TARGET_ACCOUNT: ${{ vars.AWS_ACCOUNT_ID }}
+      REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/deployment_gate.py
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+          terraform_wrapper: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: deployment-plan
+          path: .artifacts/
+      - name: Verify reviewed commit and plan
+        run: |
+          test "$(cat .artifacts/commit.txt)" = "$(git rev-parse HEAD)"
+          sha256sum -c .artifacts/plan.sha256
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ca-central-1
+          unset-current-credentials: true
+      - name: Verify assumed account
+        run: test "$(aws sts get-caller-identity --query Account --output text)" = "$TARGET_ACCOUNT"
+      - run: |
+          terraform init -input=false -lockfile=readonly -backend-config=.artifacts/backend.hcl
+          terraform apply -input=false .artifacts/deployment.tfplan
