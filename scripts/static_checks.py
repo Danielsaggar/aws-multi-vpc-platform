@@ -10,12 +10,19 @@ root = Path(__file__).resolve().parents[1]
 # Scan only Git-visible source, excluding generated state and dependency trees.
 # Include untracked new implementation files so pre-commit checks are meaningful.
 snapshot = Path(tempfile.mkdtemp(prefix="source-check-", dir=root / ".artifacts"))
+# mkdtemp uses 0700 on Linux; non-root Docker users need traversal/read access.
+# Normalize only the disposable snapshot, leaving source permissions unchanged.
+snapshot.chmod(0o755)
 files = subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root).decode().split("\0")
 for name in files:
     if name and (root / name).is_file():
         target = snapshot / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(root / name, target)
+        target.chmod(0o644)
+for directory in snapshot.rglob("*"):
+    if directory.is_dir():
+        directory.chmod(0o755)
 mount = f"type=bind,source={snapshot},target=/src,readonly"
 commands = [
     ["rhysd/actionlint:1.7.7", "-color", "/src/.github/workflows/ci.yml", "/src/.github/workflows/integration-floci.yml", "/src/.github/workflows/deploy-aws.yml"],
