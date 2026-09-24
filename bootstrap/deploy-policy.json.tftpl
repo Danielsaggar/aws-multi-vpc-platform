@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RegionalInfrastructure",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:ModifyVpcAttribute", "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:ModifySubnetAttribute",
+        "ec2:CreateInternetGateway", "ec2:AttachInternetGateway", "ec2:DetachInternetGateway", "ec2:DeleteInternetGateway",
+        "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:CreateNatGateway", "ec2:DeleteNatGateway",
+        "ec2:CreateRouteTable", "ec2:DeleteRouteTable", "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable", "ec2:ReplaceRouteTableAssociation", "ec2:CreateRoute", "ec2:ReplaceRoute", "ec2:DeleteRoute",
+        "ec2:CreateVpcPeeringConnection", "ec2:AcceptVpcPeeringConnection", "ec2:ModifyVpcPeeringConnectionOptions", "ec2:DeleteVpcPeeringConnection",
+        "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup", "ec2:AuthorizeSecurityGroupIngress", "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupIngress", "ec2:RevokeSecurityGroupEgress", "ec2:ModifySecurityGroupRules",
+        "ec2:CreateNetworkAcl", "ec2:DeleteNetworkAcl", "ec2:CreateNetworkAclEntry", "ec2:DeleteNetworkAclEntry", "ec2:ReplaceNetworkAclAssociation", "ec2:ReplaceNetworkAclEntry",
+        "ec2:CreateVpcEndpoint", "ec2:ModifyVpcEndpoint", "ec2:DeleteVpcEndpoints", "ec2:RunInstances", "ec2:TerminateInstances", "ec2:ModifyInstanceAttribute", "ec2:ModifyInstanceMetadataOptions", "ec2:CreateTags", "ec2:DeleteTags",
+        "elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:DeleteLoadBalancer", "elasticloadbalancing:ModifyLoadBalancerAttributes", "elasticloadbalancing:SetSecurityGroups", "elasticloadbalancing:SetSubnets", "elasticloadbalancing:CreateTargetGroup", "elasticloadbalancing:DeleteTargetGroup", "elasticloadbalancing:ModifyTargetGroup", "elasticloadbalancing:ModifyTargetGroupAttributes", "elasticloadbalancing:RegisterTargets", "elasticloadbalancing:DeregisterTargets", "elasticloadbalancing:CreateListener", "elasticloadbalancing:DeleteListener", "elasticloadbalancing:ModifyListener", "elasticloadbalancing:CreateRule", "elasticloadbalancing:DeleteRule", "elasticloadbalancing:ModifyRule", "elasticloadbalancing:AddTags", "elasticloadbalancing:RemoveTags",
+        "rds:CreateDBInstance", "rds:ModifyDBInstance", "rds:DeleteDBInstance", "rds:CreateDBSubnetGroup", "rds:ModifyDBSubnetGroup", "rds:DeleteDBSubnetGroup", "rds:AddTagsToResource", "rds:RemoveTagsFromResource",
+        "elasticache:CreateReplicationGroup", "elasticache:ModifyReplicationGroup", "elasticache:DeleteReplicationGroup", "elasticache:CreateCacheSubnetGroup", "elasticache:ModifyCacheSubnetGroup", "elasticache:DeleteCacheSubnetGroup", "elasticache:CreateUser", "elasticache:ModifyUser", "elasticache:DeleteUser", "elasticache:CreateUserGroup", "elasticache:ModifyUserGroup", "elasticache:DeleteUserGroup", "elasticache:AddTagsToResource", "elasticache:RemoveTagsFromResource",
+        "acm:RequestCertificate", "acm:DeleteCertificate", "acm:AddTagsToCertificate", "acm:RemoveTagsFromCertificate", "logs:CreateLogGroup", "logs:DeleteLogGroup", "logs:PutRetentionPolicy", "logs:TagResource", "logs:UntagResource"
+      ],
+      "Resource": "*",
+      "Condition": {"StringEquals": {"aws:RequestedRegion": "ca-central-1"}}
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:CreateBucket", "s3:DeleteBucket", "s3:PutBucketPolicy", "s3:DeleteBucketPolicy", "s3:PutBucketPublicAccessBlock", "s3:PutBucketOwnershipControls", "s3:DeleteBucketOwnershipControls", "s3:PutEncryptionConfiguration", "s3:PutBucketVersioning", "s3:PutLifecycleConfiguration", "s3:PutBucketTagging"],
+      "Resource": ["arn:aws:s3:::static-${project}-${environment}-${account}01-ca-central-1", "arn:aws:s3:::artifacts-${project}-${environment}-${account}01-ca-central-1", "arn:aws:s3:::alblogs-${project}-${environment}-${account}01-ca-central-1"]
+    },
+    {"Effect":"Allow", "Action":["route53:ChangeResourceRecordSets"], "Resource":"arn:aws:route53:::hostedzone/${zone}", "Condition":{"ForAllValues:StringLike":{"route53:ChangeResourceRecordSetsNormalizedRecordNames":["*.${environment}.*"]}}},
+    {"Effect":"Allow", "Action":["cloudfront:CreateDistribution", "cloudfront:CreateDistributionWithTags", "cloudfront:UpdateDistribution", "cloudfront:DeleteDistribution", "cloudfront:CreateOriginAccessControl", "cloudfront:UpdateOriginAccessControl", "cloudfront:DeleteOriginAccessControl", "cloudfront:TagResource", "cloudfront:UntagResource"], "Resource":"*"},
+    {"Effect":"Allow", "Action":["iam:CreateRole"], "Resource":"arn:aws:iam::${account}:role/platform/*-${suffix}", "Condition":{"StringEquals":{"iam:PermissionsBoundary":"${boundary}"}}},
+    {"Effect":"Allow", "Action":["iam:DeleteRole", "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:TagRole", "iam:UntagRole"], "Resource":"arn:aws:iam::${account}:role/platform/*-${suffix}"},
+    {"Effect":"Allow", "Action":["iam:CreateInstanceProfile", "iam:DeleteInstanceProfile", "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile", "iam:TagInstanceProfile"], "Resource":"arn:aws:iam::${account}:instance-profile/platform/*-${suffix}"},
+    {"Effect":"Allow", "Action":["iam:PassRole"], "Resource":"arn:aws:iam::${account}:role/platform/*-${suffix}", "Condition":{"StringEquals":{"iam:PassedToService":"ec2.amazonaws.com"}}},
+    {"Effect":"Allow", "Action":["iam:CreateServiceLinkedRole"], "Resource":"arn:aws:iam::${account}:role/aws-service-role/*", "Condition":{"StringEquals":{"iam:AWSServiceName":["elasticloadbalancing.amazonaws.com", "rds.amazonaws.com", "elasticache.amazonaws.com"]}}},
+    {"Effect":"Allow", "Action":["secretsmanager:CreateSecret", "secretsmanager:TagResource"], "Resource":"arn:aws:secretsmanager:ca-central-1:${account}:secret:rds!db-*"},
+    {"Effect":"Allow", "Action":["kms:DescribeKey"], "Resource":"arn:aws:kms:ca-central-1:${account}:key/*"},
+    {"Effect":"Allow", "Action":["secretsmanager:CreateSecret", "secretsmanager:UpdateSecret", "secretsmanager:DeleteSecret", "secretsmanager:RestoreSecret", "secretsmanager:TagResource", "secretsmanager:UntagResource", "secretsmanager:GetResourcePolicy"], "Resource":"arn:aws:secretsmanager:ca-central-1:${account}:secret:secret-*-${suffix}-??????"}
+  ]
+}

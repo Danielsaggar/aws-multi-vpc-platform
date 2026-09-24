@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="#506680"/></marker></defs>
+<style>text{font-family:Arial,sans-serif;fill:#17314e;font-size:15px}.title{font-size:26px;font-weight:bold}.head{font-size:18px;font-weight:bold}.small{font-size:13px}.box{fill:white;stroke:#71879b;stroke-width:1.5}.line{fill:none;stroke:#506680;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect width="1200" height="850" fill="#f7f9fc"/>
+<text x="35" y="45" class="title">AWS Multi-VPC Platform</text>
+<text x="35" y="72">ca-central-1 · separate DEV / PROD accounts · two AZs · no AWS deployment evidence</text>
+<rect x="35" y="100" width="180" height="55" rx="7" class="box"/><text x="65" y="133">Internet users</text>
+<rect x="845" y="100" width="310" height="55" rx="7" class="box"/><text x="870" y="125">CloudFront · default TLS</text><text x="870" y="144" class="small">Global service / signed OAC origin requests</text>
+<path d="M215 127H840" class="line"/><text x="488" y="116" class="small">Static assets</text>
+<rect x="35" y="185" width="730" height="465" rx="12" fill="#edf4fc" stroke="#7394b5" stroke-width="2"/>
+<text x="55" y="214" class="head">Primary VPC</text>
+<text x="55" y="237" class="small">DEV 10.10.0.0/16 · PROD 10.20.0.0/16</text>
+<rect x="55" y="258" width="690" height="97" rx="8" fill="#e0eee8" stroke="#91b1a2"/>
+<text x="72" y="280" class="small">Public subnets · AZ A / AZ B · /24 offsets 0 and 1</text>
+<rect x="75" y="294" width="240" height="42" rx="5" class="box"/><text x="91" y="320">ALB + regional ACM TLS</text>
+<rect x="367" y="294" width="190" height="42" rx="5" class="box"/><text x="383" y="320">NAT + EIP per PROD AZ</text>
+<rect x="603" y="294" width="115" height="42" rx="5" class="box"/><text x="636" y="320">IGW</text>
+<path d="M125 155V292" class="line"/><text x="135" y="178" class="small">HTTPS</text>
+<path d="M558 315H600" class="line"/>
+<rect x="55" y="375" width="690" height="100" rx="8" fill="#e7edf8" stroke="#91a6c9"/>
+<text x="72" y="398" class="small">Private application subnets · AZ A / AZ B · /24 offsets 10 and 11</text>
+<text x="75" y="427" class="head">frontsite · backoffice · webapi · gameapi</text>
+<text x="75" y="453" class="small">PROD: 2 EC2 per app / DEV: 1 per app · SGs + NACLs · IMDSv2 · encrypted EBS</text>
+<path d="M195 337V373" class="line"/><text x="208" y="363" class="small">8080 / ALB SG only</text>
+<path d="M462 375V339" class="line"/>
+<rect x="65" y="520" width="190" height="90" rx="6" class="box"/><text x="83" y="549" class="head">Transactional RDS</text><text x="83" y="574">Isolated PostgreSQL</text><text x="83" y="594" class="small">Two AZs · offsets 20 / 21</text>
+<rect x="285" y="520" width="185" height="90" rx="6" class="box"/><text x="306" y="549" class="head">Redis</text><text x="306" y="574">TLS + IAM / private</text><text x="306" y="594" class="small">Offsets 30 / 31</text>
+<rect x="500" y="520" width="230" height="90" rx="6" class="box"/><text x="518" y="549" class="head">VPC endpoints</text><text x="518" y="574">S3 gateway / private routes</text><text x="518" y="594" class="small">Secrets interface ENIs / 40, 41</text>
+<path d="M162 475V517" class="line"/><text x="174" y="504" class="small">5432</text>
+<path d="M380 475V517" class="line"/><text x="389" y="504" class="small">6379</text>
+<path d="M615 475V517" class="line"/>
+<rect x="845" y="190" width="310" height="65" rx="7" class="box"/><text x="870" y="219" class="head">Private static S3</text><text x="870" y="242" class="small">OAC-only read grant / public access blocked</text>
+<path d="M1000 155V188" class="line"/>
+<rect x="810" y="375" width="345" height="190" rx="12" fill="#f0edf8" stroke="#a196bd" stroke-width="2"/>
+<text x="832" y="404" class="head">Historical VPC</text><text x="832" y="428" class="small">DEV 10.11.0.0/16 · PROD 10.21.0.0/16</text>
+<rect x="837" y="454" width="290" height="82" rx="6" class="box"/><text x="854" y="483" class="head">Historical PostgreSQL RDS</text><text x="854" y="507">Isolated / AZ A and B subnet group</text><text x="854" y="526" class="small">PROD Multi-AZ · /24 offsets 20 and 21</text>
+<path d="M745 442H790V495H834" class="line"/><text x="812" y="351" class="small">Peering: reciprocal app ↔ history routes</text>
+<rect x="35" y="685" width="350" height="90" rx="7" class="box"/><text x="53" y="713" class="head">Centralized observability</text><text x="53" y="738">CloudWatch application / bootstrap logs</text><text x="53" y="760">ALB access logs → private SSE-S3 bucket</text>
+<path d="M75 475H20V730H33" class="line"/>
+<rect x="415" y="685" width="320" height="90" rx="7" class="box"/><text x="433" y="713" class="head">Private service access</text><text x="433" y="738">Artifact S3 via gateway endpoint</text><text x="433" y="760">Application secrets via interface ENIs</text>
+<path d="M615 610V682" class="line"/>
+<rect x="765" y="685" width="390" height="90" rx="7" class="box"/><text x="783" y="713" class="head">Bootstrap and deployment</text><text x="783" y="738">GitHub OIDC → scoped plan / deployment roles</text><text x="783" y="760">Encrypted versioned S3 state + native locking</text>
+<text x="35" y="817" class="small">No public EC2/database addresses · no data-tier Internet route · DEV accepts reduced availability · source: architecture.mmd</text>
+</svg>

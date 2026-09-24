@@ -1,0 +1,52 @@
+name: Floci integration
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, prod]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+          terraform_wrapper: false
+      - run: terraform init -backend=false -input=false -lockfile=readonly
+      - run: docker compose -p pmp-integration -f compose.floci.yml up -d --wait --wait-timeout 120
+      - name: Validate local bootstrap lifecycle
+        env:
+          TEST_ENV: ${{ matrix.environment }}
+        run: |
+          mkdir -p .artifacts
+          python3 scripts/local.py bootstrap --environment "$TEST_ENV" --endpoint http://localhost:4567 > .artifacts/bootstrap.log 2>&1
+      - name: Provision, validate, and destroy locally
+        env:
+          TEST_ENV: ${{ matrix.environment }}
+        run: |
+          mkdir -p .artifacts
+          python3 scripts/local.py integration --environment "$TEST_ENV" --endpoint http://localhost:4567 > .artifacts/integration.log 2>&1
+      - name: Verify cleanup
+        if: always()
+        run: python3 scripts/local.py assert-clean
+      - name: Stop owned emulator
+        if: always()
+        run: docker compose -p pmp-integration -f compose.floci.yml down --volumes
+      - name: Collect sanitized evidence
+        if: always()
+        run: python3 scripts/evidence.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: floci-${{ matrix.environment }}
+          path: .artifacts/summary.json
+          retention-days: 7

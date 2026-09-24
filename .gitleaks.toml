@@ -1,0 +1,6 @@
+title = "Platform secret scanning"
+[extend]
+useDefault = true
+[[allowlists]]
+description = "Generated local state, artifacts, dependencies and original challenge references"
+paths = ['''(^|/)(\.local|\.artifacts|\.terraform|\.git)/''', '''\.local-run.*\.log$''']
